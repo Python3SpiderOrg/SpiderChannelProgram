@@ -13,9 +13,12 @@ from  lxml import etree
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
+import time
 import datetime
-from datetime import timedelta
-now = datetime.datetime.now()
-this_week_start = now - timedelta(days=now.weekday())
-with open('1.txt','a') as f:
-    f.writelines('qqqqqqq')
+#今天星期几
+today=int(time.strftime("%w"))
+print (today)
+
+
+
+
