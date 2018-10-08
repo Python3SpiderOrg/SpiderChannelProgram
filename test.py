@@ -17,9 +17,11 @@ import time
 import datetime
 from datetime import timedelta
 
+import  configparser
+cf = configparser.ConfigParser()
+cf.read('spiderset.conf')
+print(cf.get('config','isspider'))
 
-now = datetime.datetime.now()
-this_week_start = now - timedelta(days=now.weekday()) #获取本周一的时间
-day = (this_week_start + datetime.timedelta(days=(2 - 1))).strftime("%Y/%m/%d")
-print(day[2:])
+
+
 

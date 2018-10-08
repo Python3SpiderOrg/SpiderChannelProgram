@@ -11,6 +11,7 @@
 import os
 import requests
 import time
+import configparser
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -24,7 +25,7 @@ from collections import OrderedDict
 urls = {'tvmao_url':r'https://www.tvmao.com' ,'mobile_tvmao_url':r'https://m.tvmao.com','baitv_url':r'http://www.baitv.com'}
 driver_path = os.getcwd() + '\driver\phantomjs.exe'
 program_info = OrderedDict() #创建一个有序字典
-days = range(1,15) #爬取天数
+# days = range(1,15) #爬取天数
 week_dict = {"0":'星期天',"1": "星期一", "2": "星期二", "3": "星期三", "4": "星期四", "5": "星期五", "6": "星期六"}
 # 央视
 cctv_prog = {'CCTV1':'CCTV1','CCTV2':'CCTV2','CCTV3':'CCTV3','CCTV4':'CCTV4','CCTV5':'CCTV5','CCTV5+':'CCTV5-PLUS',
@@ -65,7 +66,6 @@ def read_channelname():
 def select_url(**urls):
     print("检查与目标网址的连接状态......")
     for urlname in urls.keys():
-        print("检查与目标网址%s的连接状态......"%urlname)
         try:
             rec = requests.get(urls.get(urlname),headers=headers)
             if rec.status_code == 200:
@@ -77,13 +77,14 @@ def select_url(**urls):
             pass
     raise ("与所有目标网址连接失败，停止节目单爬取，请检查你的网络！")
 class spiderprogram:
-    def __init__(self,urlname,channelname):
+    def __init__(self,urlname,channelname,days):
         self.url = urls.get(urlname)
         self.channelname = channelname
+        self.days = days
 
     def spider_tvmao(self):
         driver = webdriver.PhantomJS(executable_path=driver_path)
-        for i in days:
+        for i in range(1,days+1):
             programname_list = []
             if name in cctv_prog.keys():
                 link = self.url+'/program/'+'CCTV-'+cctv_prog.get(name)+'-w'+str(i)+'.html'
@@ -108,7 +109,7 @@ class spiderprogram:
         return program_info
     def spider_mobiletvmao(self):
         driver = webdriver.PhantomJS(executable_path=driver_path)
-        for i in days:
+        for i in range(1,days+1):
             programname_list = []
             if name in cctv_prog.keys():
                 link = self.url+'/program/'+'CCTV-'+name+'-w'+str(i)+'.html'
@@ -135,7 +136,7 @@ class spiderprogram:
         return program_info
 
     def spider_baitv(self):
-        for i in days:
+        for i in range(1,days+1):
             programname_list = []
             programname_list_bak = []
             if self.channelname in cctv_prog.keys():
@@ -170,21 +171,56 @@ def write_txt(filename,data):
             f.writelines(key)
             f.writelines('\n')
             for line in data.get(key):
-                f.writelines(line)
+                f.writelines(line.strip('\n'))
                 f.writelines('\n')
 
 
+def createprogram(channelname,days):
+    programfile_path = os.getcwd()+"\programbak\%s.txt"%channelname
+    commonfile_path = os.getcwd()+"\programbak\common.txt"
+    if os.path.exists(programfile_path):
+        readfile_path = programfile_path
+    else:
+        readfile_path = commonfile_path
+    with open(readfile_path,'r') as f:
+        programbak_data =f.readlines()
+    for i in range(1,days+1):
+        day = (this_week_start + datetime.timedelta(days=(i - 1))).strftime("%Y/%m/%d")
+        week = week_dict.get((this_week_start + datetime.timedelta(days=(i - 1))).strftime("%w"))
+        program_info[day[2:] + '   ' + week] = programbak_data
+    return(program_info)
+
+
+
+
 if __name__=='__main__':
+    print("读取配置文件......")
+    cf = configparser.ConfigParser()
+    cf.read('spiderset.conf')
+    isspider = int(cf.get('config','isspider'))
+    days = int(cf.get('config','days'))
     channelnames = read_channelname()
-    spider_urlname = select_url(**urls)
-    for name in channelnames:
-        print("正在爬取%s的节目单......"%name)
-        if spider_urlname == 'tvmao_url':
-            data = spiderprogram(spider_urlname,name).spider_tvmao()
-        elif spider_urlname == 'mobile_tvmao_url':
-            data = spiderprogram(spider_urlname,name).spider_mobiletvmao()
-        else:
-            data = spiderprogram(spider_urlname,name).spider_baitv()
-        write_txt(name,data)
-    print("所有频道的节目单爬取完毕！")
+    if isspider==1 and days<=14:
+        print("开始从网络上爬取节目单......")
+        spider_urlname = select_url(**urls)
+        for name in channelnames:
+            print("正在爬取%s的节目单......"%name)
+            if spider_urlname == 'tvmao_url':
+                data = spiderprogram(spider_urlname,name,days).spider_tvmao()
+            elif spider_urlname == 'mobile_tvmao_url':
+                data = spiderprogram(spider_urlname,name,days).spider_mobiletvmao()
+            else:
+                data = spiderprogram(spider_urlname,name,days).spider_baitv()
+            write_txt(name,data)
+        print("所有频道的节目单爬取完毕！")
+    else:
+        print("开始自动生成节目单......")
+        for name in channelnames:
+            print("正在生成%s的节目单......" % name)
+            data =createprogram(name,days)
+            write_txt(name,data)
+        print("所有频道的节目单生成完毕！")
+
+
+
 
