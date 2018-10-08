@@ -31,7 +31,8 @@ cctv_prog = {'CCTV1':'CCTV1','CCTV2':'CCTV2','CCTV3':'CCTV3','CCTV4':'CCTV4','CC
              'CCTV6':'CCTV6','CCTV7':'cctv7','CCTV8':'CCTV8','CCTV9':'CCTV9','CCTV10':'CCTV10','CCTV11':'CCTV11',
              'CCTV12':'CCTV12','CCTV13':'CCTV13','CCTV14':'CCTV14','CCTV15':'CCTV16'}
 #卫视
-province_prog = {'AHWS':'AHTV','BTV':'BTV','GDWS':'GDTV','SZWS':'SZTV','GXWS':'GUANXI','HNWS':'HUNANTV','JSWS':'JSTV'}
+province_prog = {'AHWS':'AHTV','BTV':'BTV','GDWS':'GDTV','SZWS':'SZTV','GXWS':'GUANXI','HNWS':'HUNANTV','JSWS':'JSTV',
+                 'YNWS':'YNTV'}
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36'
 }
@@ -102,7 +103,7 @@ class spiderprogram:
                         program_time = program.find("span").text
                         program_name = program.find(class_="p_show").text
                         programname_list.append(program_time + '  ' + program_name)
-                program_info[day + '   ' + week] = programname_list
+                program_info[day[2:] + '   ' + week] = programname_list
         driver.quit()
         return program_info
     def spider_mobiletvmao(self):
@@ -129,7 +130,7 @@ class spiderprogram:
                         program_time = program.find("div").text
                         program_name = program.contents[1].text
                         programname_list.append(program_time+'  '+program_name)
-                program_info[day + '   ' + week] = programname_list
+                program_info[day[2:] + '   ' + week] = programname_list
         driver.quit()
         return program_info
 
@@ -156,7 +157,7 @@ class spiderprogram:
                 for pro in programname_list_bak:    #百视网查询的节目单有重复的，对节目单列表去重
                     if pro not in programname_list:
                         programname_list.append(pro)
-                program_info[day + '   ' + week] = programname_list
+                program_info[day[2] + '   ' + week] = programname_list
             time.sleep(1)
         return program_info
 

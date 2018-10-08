@@ -15,10 +15,11 @@ from selenium import webdriver
 
 import time
 import datetime
-#今天星期几
-today=int(time.strftime("%w"))
-print (today)
+from datetime import timedelta
 
 
-
+now = datetime.datetime.now()
+this_week_start = now - timedelta(days=now.weekday()) #获取本周一的时间
+day = (this_week_start + datetime.timedelta(days=(2 - 1))).strftime("%Y/%m/%d")
+print(day[2:])
 
